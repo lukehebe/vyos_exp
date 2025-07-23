@@ -5,7 +5,7 @@ import argparse
 
 RPORT = 22
 USERNAME = 'vyos'
-PASSWORD = 'vyos'
+PASSWORD = 'Pa$$w0rd'
 
 ascii_art = r'''
 \.          |\
